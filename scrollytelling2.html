@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Green Dividend: UK Environmental Co-benefits</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/intersection-observer@0.12.0/intersection-observer.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        line-height: 1.6;
+      }
+
+      #intro {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #0a4d3c 0%, #2c7a67 100%);
+        color: white;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      #intro h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        animation: fadeInDown 1s ease-out;
+      }
+
+      #intro h1 .emoji {
+        font-size: 4rem;
+        display: inline-block;
+        margin-right: 0.5rem;
+        animation: spin 3s linear infinite;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #intro p {
+        font-size: 1.3rem;
+        max-width: 800px;
+        line-height: 1.8;
+        opacity: 0.95;
+        animation: fadeInUp 1s ease-out 0.3s backwards;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      #scrolly-container {
+        position: relative;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      #visualization {
+        position: sticky;
+        top: 0;
+        width: 60%;
+        height: 100vh;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 3px solid #2c7a67;
+        box-shadow: -5px 0 20px rgba(44, 122, 103, 0.1);
+      }
+
+      #vis-content {
+        width: 100%;
+        height: 100%;
+        padding: 2rem;
+      }
+
+      #narrative {
+        width: 40%;
+        padding: 2rem;
+      }
+
+      .step {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f8f6 100%);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #2c7a67;
+        opacity: 0.3;
+        transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        animation: slideInUp 0.6s ease-out;
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 0.3;
+          transform: translateY(0);
+        }
+      }
+
+      .step.active {
+        opacity: 1;
+        transform: scale(1.01);
+        box-shadow: 0 8px 20px rgba(10, 77, 60, 0.15);
+      }
+
+      .step.active h2 {
+        animation: scaleIn 0.5s ease-out;
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.95);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .step h2 {
+        font-size: 2rem;
+        color: #0a4d3c;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .step h2 .emoji {
+        font-size: 2.5rem;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .step p {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #34495e;
+        line-height: 1.8;
+        animation: fadeInText 0.8s ease-out 0.2s backwards;
+      }
+
+      .step p strong {
+        color: #0a4d3c;
+        font-weight: 700;
+      }
+
+      @keyframes fadeInText {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .interactive-hint {
+        margin-top: 1.5rem;
+        padding: 0.8rem 1rem;
+        background-color: #e8f5f3;
+        border-left: 4px solid #2c7a67;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        color: #0a4d3c;
+        font-style: italic;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .interactive-hint::before {
+        content: "👆";
+        font-size: 1.2rem;
+      }
+
+      .chart-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0a4d3c;
+        text-align: center;
+        margin-bottom: 1rem;
+        animation: slideInDown 0.6s ease-out;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #2c7a67;
+      }
+
+      @keyframes slideInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .tooltip {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 1000;
+        max-width: 250px;
+      }
+
+      .tooltip strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #4ecdc4;
+      }
+
+      .axis-label {
+        font-size: 0.9rem;
+        fill: #555;
+      }
+
+      .legend {
+        font-size: 0.85rem;
+      }
+
+      svg {
+        overflow: visible;
+        animation: fadeInChart 0.8s ease-out;
+      }
+
+      @keyframes fadeInChart {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      circle:hover {
+        filter: drop-shadow(0 0 8px rgba(44, 122, 103, 0.5));
+      }
+
+      rect:hover {
+        filter: drop-shadow(0 0 8px rgba(44, 122, 103, 0.5));
+      }
+
+      #conclusion {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #2c7a67 0%, #0a4d3c 100%);
+        color: white;
+        text-align: center;
+        padding: 4rem 2rem;
+      }
+
+      #conclusion h2 {
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        animation: fadeInDown 1s ease-out;
+      }
+
+      #conclusion h2 .emoji {
+        display: inline-block;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      #conclusion p {
+        font-size: 1.2rem;
+        max-width: 900px;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+        animation: fadeInUp 1s ease-out 0.2s backwards;
+      }
+
+      @media (max-width: 1024px) {
+        #scrolly-container {
+          flex-direction: column;
+        }
+
+        #visualization {
+          position: relative;
+          width: 100%;
+          height: 60vh;
+        }
+
+        #narrative {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="intro">
+      <h1>
+        <span class="emoji">🌍</span>The Green Dividend: UK Environmental
+        Co-benefits
+      </h1>
+      <p>
+        🌱 Achieving Net-Zero 2050 is not just about reducing carbon emissions.
+        This dataset reveals the hidden economic value worth millions of Pounds
+        Sterling felt directly by communities at the local level. This is an
+        analysis of co-benefits from climate policy across UK regions.
+      </p>
+    </div>
+
+    <div id="scrolly-container">
+      <div id="visualization">
+        <div id="vis-content">
+          <div class="chart-title" id="chart-title"></div>
+          <svg id="main-svg"></svg>
+        </div>
+      </div>
+
+      <div id="narrative">
+        <div class="step" data-step="0">
+          <div>
+            <h2><span class="emoji">💨</span>Clean Air, Real Investment</h2>
+            <p>
+              💚 <strong>Clean air is the foundation of well-being.</strong><br>
+              Under the recommendations of the Seventh Carbon Budget, reductions in air pollution are projected to deliver <strong>massive economic savings</strong>. <em>The visualization shows the distribution of air quality benefits across small areas (LSOA/Data Zones) throughout the UK.</em>
+            </p>
+            <p>
+              🎨 <strong>Color Interpretation:</strong>
+              <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                <li><strong>Deeper color</strong> = <em>greater healthcare cost savings</em> achieved through pollution reduction</li>
+                <li><strong>Air quality improvements</strong> are <em>one of the most significant economic benefits</em> of Net-Zero transition</li>
+                <li>Values measured in <strong>millions of GBP (£M)</strong></li>
+              </ul>
+            </p>
+            <div class="interactive-hint">
+              Hover over the grid cells to explore Local Authority details
+              and exact benefit values
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="1">
+          <div>
+            <h2>
+              <span class="emoji">🚴</span>The Active Travel Revolution & Health
+            </h2>
+            <p>
+              📊 <strong>Environmental policies drive lifestyle changes.</strong><br>
+              <em>The Physical Activity value reflects health benefits from Active Travel (walking and cycling).</em> Based on research from the University of Edinburgh:
+            </p>
+            <p style="margin-top: 0.5rem;">
+              <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                <li><strong>Life expectancy increases</strong> through more active lifestyles</li>
+                <li><strong>NHS burden reduces</strong> due to improved public health outcomes</li>
+                <li><strong>Strong correlation:</strong> areas with better air quality see <em>higher physical activity benefits</em></li>
+                <li>Creates a <strong>positive feedback loop</strong> for sustainable health improvements</li>
+              </ul>
+            </p>
+            <div class="interactive-hint">
+              Hover over each point to explore the relationship between air
+              quality and physical activity benefits
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="2">
+          <div>
+            <h2>
+              <span class="emoji">🏠</span>Home Comfort & Energy Efficiency
+            </h2>
+            <p>
+              🔥 <strong>Co-benefits extend into our homes.</strong><br>
+              Benefits from Excess Cold and Dampness show results of Net-Zero interventions:
+            </p>
+            <p style="margin-top: 0.5rem;">
+              <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                <li><strong>Better home insulation</strong> & <strong>efficient heating systems</strong> = <em>immediate comfort gains</em></li>
+                <li><strong>High energy poverty areas</strong> benefit most from protection against <em>extreme cold health damage</em></li>
+                <li>Economic value: <strong>millions of GBP (£M) in savings</strong></li>
+              </ul>
+            </p>
+            <p>
+              ❄️ <strong>Real outcomes:</strong> <em>Warmer, drier homes</em> means <strong>healthier families</strong> and <strong>reduced NHS costs</strong> across the UK.
+            </p>
+            <div class="interactive-hint">
+              Hover over the bubbles to see how excess cold and dampness
+              benefits vary across regions
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="3">
+          <div>
+            <h2><span class="emoji">🛣️</span>Weighing Costs and Safety</h2>
+            <p>
+              🚗 <strong>Transportation changes impact safety & noise.</strong><br>
+              The trade-offs in switching from private vehicles:
+            </p>
+            <p style="margin-top: 0.5rem;">
+              <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                <li><strong>Hassle Costs:</strong> <em>longer journey times</em> from modal shift</li>
+                <li><strong>Benefits:</strong> <em>reduced noise pollution</em> & <em>improved road safety</em></li>
+                <li><strong>Net result:</strong> significant quality of life improvements for urban residents</li>
+              </ul>
+            </p>
+            <p>
+              ⚖️ The chart shows how <strong>noise reduction and safety gains</strong> <em>offset the inconveniences</em> of modal shift. <strong>These quality of life improvements are essential</strong> to the Net-Zero transition.
+            </p>
+            <div class="interactive-hint">
+              Hover over the bars to see detailed breakdown for each Local
+              Authority
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="4">
+          <div>
+            <h2>
+              <span class="emoji">📊</span>Conclusion: The Total Green Dividend
+            </h2>
+            <p>
+              💰 <strong>Environmental policies create an economic dividend.</strong><br>
+              The cumulative benefits across all areas include:
+            </p>
+            <p style="margin-top: 0.5rem;">
+              <ul style="margin: 0.5rem 0; padding-left: 2rem;">
+                <li>💚 <strong>Healthcare savings</strong> from cleaner air & better living conditions</li>
+                <li>💪 <strong>Increased productivity</strong> from healthier, more active populations</li>
+                <li>😊 <strong>Improved quality of life</strong> across all dimensions</li>
+              </ul>
+            </p>
+            <p>
+              🌿 <strong>The Net-Zero path is prosperity:</strong> <em>Not just an environmental imperative,</em> but <strong>an investment in the nation's future</strong> on economic and social grounds.
+            </p>
+            <div class="interactive-hint">
+              Hover over each bar to see the top 50 performing regions with
+              the highest total environmental benefits
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="conclusion">
+      <h2><span class="emoji">✨</span>Investing in Our Future</h2>
+      <p>
+        📈 The evidence is clear: environmental policy delivers tangible
+        economic returns. From cleaner air to safer streets, from warmer homes
+        to healthier communities, the co-benefits of Net-Zero create value
+        across every dimension of life in the UK.
+      </p>
+      <p>
+        🎯 This is the Green Dividend—a comprehensive package of benefits that
+        makes the case for ambitious climate action not just on environmental
+        grounds, but on economic and social grounds as well.
+      </p>
+      <hr style="margin: 2rem 0; border: none; border-top: 1px solid #ddd;">
+      <p style="font-size: 0.9rem; color: #ddd; margin-top: 1rem;">
+        <strong>Data Source:</strong> UK Co-Benefits Dataset<br>
+        <em>This visualization presents aggregated analysis of co-benefits data from the UK Co-Benefits Dataset, showing the economic value of environmental interventions across small areas (LSOA/Data Zones) throughout the United Kingdom.</em>
+      </p>
+    </div>
+
+    <div class="tooltip"></div>
+
+    <script>
+      // Load and process data
+      // Load both CSV files
+      Promise.all([d3.csv("cleaned_level_1_full.csv"), d3.csv("lookups.csv")])
+        .then(([data, lookups]) => {
+
+          // Create lookup map for faster access
+          const lookupMap = {};
+          lookups.forEach((lookup) => {
+            lookupMap[lookup.small_area] = {
+              local_authority: lookup.local_authority,
+              nation: lookup.nation,
+            };
+          });
+
+          // Convert strings to numbers and merge lookup data
+          data.forEach((d) => {
+            d.air_quality = +d.air_quality;
+            d.congestion = +d.congestion;
+            d.dampness = +d.dampness;
+            d.diet_change = +d.diet_change;
+            d.excess_cold = +d.excess_cold;
+            d.excess_heat = +d.excess_heat || 0;
+            d.hassle_costs = +d.hassle_costs;
+            d.noise = +d.noise;
+            d.physical_activity = +d.physical_activity;
+            d.road_repairs = +d.road_repairs;
+            d.road_safety = +d.road_safety;
+            d.sum = +d.sum;
+
+            // Add lookup data
+            if (lookupMap[d.small_area]) {
+              d.local_authority = lookupMap[d.small_area].local_authority;
+              d.nation = lookupMap[d.small_area].nation;
+            } else {
+              d.local_authority = "Unknown";
+              d.nation = "Unknown";
+            }
+          });
+
+          // Sample data for performance (every 10th row for scatter plots)
+          const sampledData = data.filter((d, i) => i % 10 === 0);
+
+          // Initialize visualization
+          const margin = { top: 40, right: 100, bottom: 80, left: 80 };
+          const svgWidth = document.getElementById("vis-content").clientWidth;
+          const svgHeight =
+            document.getElementById("vis-content").clientHeight - 100;
+          const width = svgWidth - margin.left - margin.right;
+          const height = svgHeight - margin.top - margin.bottom;
+
+          const svg = d3
+            .select("#main-svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+
+          const g = svg
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+          const tooltip = d3.select(".tooltip");
+
+          // Color scales
+          const colorScaleDiverging = d3.scaleSequential(d3.interpolateRdYlGn);
+          const colorScaleSequential = d3.scaleSequential(d3.interpolateGreens);
+
+          // Visualization functions
+          function showBubbleChart() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Distribution of Total Environmental Benefits"
+            );
+
+            // Aggregate data by bins
+            const bins = d3
+              .bin()
+              .value((d) => d.sum)
+              .thresholds(50)(data);
+
+            const maxCount = d3.max(bins, (d) => d.length);
+            const radiusScale = d3
+              .scaleSqrt()
+              .domain([0, maxCount])
+              .range([5, 50]);
+
+            const xScale = d3
+              .scaleLinear()
+              .domain(d3.extent(bins, (d) => d.x0))
+              .range([0, width]);
+
+            colorScaleSequential.domain(
+              d3.extent(bins, (d) => d3.mean(d, (v) => v.sum))
+            );
+
+            const simulation = d3
+              .forceSimulation(bins)
+              .force(
+                "x",
+                d3.forceX((d) => xScale((d.x0 + d.x1) / 2)).strength(0.5)
+              )
+              .force("y", d3.forceY(height / 2).strength(0.1))
+              .force(
+                "collision",
+                d3.forceCollide((d) => radiusScale(d.length) + 2)
+              )
+              .stop();
+
+            for (let i = 0; i < 100; i++) simulation.tick();
+
+            const bubbles = g
+              .selectAll("circle")
+              .data(bins)
+              .join("circle")
+              .attr("cx", (d) => d.x)
+              .attr("cy", (d) => d.y)
+              .attr("r", 0)
+              .attr("fill", (d) =>
+                colorScaleSequential(d3.mean(d, (v) => v.sum))
+              )
+              .attr("opacity", 0.7)
+              .attr("stroke", "#0a4d3c")
+              .attr("stroke-width", 1.5)
+              .on("mouseover", function (event, d) {
+                d3.select(this).attr("opacity", 1);
+                tooltip
+                  .style("opacity", 1)
+                  .html(
+                    `<strong>Benefit Range</strong>£${d.x0.toFixed(
+                      2
+                    )}M - £${d.x1.toFixed(2)}M<br>Areas: ${
+                      d.length
+                    }<br>Avg: £${d3.mean(d, (v) => v.sum).toFixed(2)}M`
+                  );
+              })
+              .on("mousemove", function (event) {
+                tooltip
+                  .style("left", event.pageX + 15 + "px")
+                  .style("top", event.pageY - 15 + "px");
+              })
+              .on("mouseout", function () {
+                d3.select(this).attr("opacity", 0.7);
+                tooltip.style("opacity", 0);
+              });
+
+            bubbles
+              .transition()
+              .duration(1000)
+              .attr("r", (d) => radiusScale(d.length));
+
+            // X axis
+            const xAxis = g
+              .append("g")
+              .attr("transform", `translate(0,${height})`)
+              .call(
+                d3
+                  .axisBottom(xScale)
+                  .ticks(8)
+                  .tickFormat((d) => `£${d.toFixed(0)}M`)
+              );
+
+            xAxis
+              .append("text")
+              .attr("x", width / 2)
+              .attr("y", 45)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Total Environmental Benefit (£M)");
+          }
+
+          function showChoroplethMap() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Air Quality Benefits Across UK Regions"
+            );
+
+            // Sort and get top areas
+            const sortedData = [...data]
+              .sort((a, b) => b.air_quality - a.air_quality)
+              .slice(0, 500);
+
+            colorScaleSequential.domain(
+              d3.extent(sortedData, (d) => d.air_quality)
+            );
+
+            // Create grid layout
+            const gridSize = Math.ceil(Math.sqrt(sortedData.length));
+            const cellSize = Math.min(width / gridSize, height / gridSize) - 2;
+
+            const cells = g
+              .selectAll("rect")
+              .data(sortedData)
+              .join("rect")
+              .attr("x", (d, i) => (i % gridSize) * (cellSize + 2))
+              .attr("y", (d, i) => Math.floor(i / gridSize) * (cellSize + 2))
+              .attr("width", 0)
+              .attr("height", 0)
+              .attr("fill", (d) => colorScaleSequential(d.air_quality))
+              .attr("stroke", "#fff")
+              .attr("stroke-width", 0.5)
+              .on("mouseover", function (event, d) {
+                d3.select(this)
+                  .attr("stroke", "#0a4d3c")
+                  .attr("stroke-width", 2);
+                tooltip
+                  .style("opacity", 1)
+                  .html(
+                    `<strong>${d.local_authority}</strong><br>${
+                      d.nation
+                    }<br>Air Quality: £${d.air_quality.toFixed(2)}M`
+                  );
+              })
+              .on("mousemove", function (event) {
+                tooltip
+                  .style("left", event.pageX + 15 + "px")
+                  .style("top", event.pageY - 15 + "px");
+              })
+              .on("mouseout", function () {
+                d3.select(this)
+                  .attr("stroke", "#fff")
+                  .attr("stroke-width", 0.5);
+                tooltip.style("opacity", 0);
+              });
+
+            cells
+              .transition()
+              .duration(800)
+              .delay((d, i) => i * 2)
+              .attr("width", cellSize)
+              .attr("height", cellSize);
+
+            // Legend
+            const legendWidth = 200;
+            const legendHeight = 15;
+            const legend = g
+              .append("g")
+              .attr(
+                "transform",
+                `translate(${width - legendWidth}, ${height + 30})`
+              );
+
+            const legendScale = d3
+              .scaleLinear()
+              .domain(colorScaleSequential.domain())
+              .range([0, legendWidth]);
+
+            const legendAxis = d3
+              .axisBottom(legendScale)
+              .ticks(5)
+              .tickFormat((d) => `£${d.toFixed(1)}M`);
+
+            legend
+              .selectAll("rect")
+              .data(d3.range(legendWidth))
+              .join("rect")
+              .attr("x", (d, i) => i)
+              .attr("y", 0)
+              .attr("width", 1)
+              .attr("height", legendHeight)
+              .attr("fill", (d) => colorScaleSequential(legendScale.invert(d)));
+
+            legend
+              .append("g")
+              .attr("transform", `translate(0,${legendHeight})`)
+              .call(legendAxis)
+              .select(".domain")
+              .remove();
+          }
+
+          function showScatterPlot() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Air Quality vs Physical Activity Benefits (Grouped by Local Authority)"
+            );
+
+            // Group data by local_authority and calculate averages
+            const groupedData = d3.rollup(
+              sampledData,
+              (group) => ({
+                air_quality: d3.mean(group, (d) => d.air_quality),
+                physical_activity: d3.mean(group, (d) => d.physical_activity),
+                local_authority: group[0].local_authority,
+                nation: group[0].nation,
+                count: group.length,
+              }),
+              (d) => d.local_authority
+            );
+
+            const aggregatedData = Array.from(groupedData.values());
+
+            const xScale = d3
+              .scaleLinear()
+              .domain(d3.extent(aggregatedData, (d) => d.air_quality))
+              .range([0, width])
+              .nice();
+
+            const yScale = d3
+              .scaleLinear()
+              .domain(d3.extent(aggregatedData, (d) => d.physical_activity))
+              .range([height, 0])
+              .nice();
+
+            // Add axes
+            const xAxis = g
+              .append("g")
+              .attr("transform", `translate(0,${height})`)
+              .call(
+                d3.axisBottom(xScale).tickFormat((d) => `£${d.toFixed(1)}M`)
+              );
+
+            xAxis
+              .append("text")
+              .attr("x", width / 2)
+              .attr("y", 45)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Air Quality Benefit (£M)");
+
+            const yAxis = g
+              .append("g")
+              .call(d3.axisLeft(yScale).tickFormat((d) => `£${d.toFixed(1)}M`));
+
+            yAxis
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("x", -height / 2)
+              .attr("y", -55)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Physical Activity Benefit (£M)");
+
+            // Calculate regression line
+            const xMean = d3.mean(aggregatedData, (d) => d.air_quality);
+            const yMean = d3.mean(aggregatedData, (d) => d.physical_activity);
+            let numerator = 0;
+            let denominator = 0;
+            aggregatedData.forEach((d) => {
+              numerator +=
+                (d.air_quality - xMean) * (d.physical_activity - yMean);
+              denominator += Math.pow(d.air_quality - xMean, 2);
+            });
+            const slope = numerator / denominator;
+            const intercept = yMean - slope * xMean;
+
+            // Regression line
+            const lineData = [
+              {
+                x: d3.min(aggregatedData, (d) => d.air_quality),
+                y:
+                  slope * d3.min(aggregatedData, (d) => d.air_quality) +
+                  intercept,
+              },
+              {
+                x: d3.max(aggregatedData, (d) => d.air_quality),
+                y:
+                  slope * d3.max(aggregatedData, (d) => d.air_quality) +
+                  intercept,
+              },
+            ];
+
+            g.append("line")
+              .attr("x1", xScale(lineData[0].x))
+              .attr("y1", yScale(lineData[0].y))
+              .attr("x2", xScale(lineData[0].x))
+              .attr("y2", yScale(lineData[0].y))
+              .attr("stroke", "#e74c3c")
+              .attr("stroke-width", 2)
+              .attr("stroke-dasharray", "5,5")
+              .transition()
+              .duration(1000)
+              .attr("x2", xScale(lineData[1].x))
+              .attr("y2", yScale(lineData[1].y));
+
+            // Points
+            const circles = g
+              .selectAll("circle")
+              .data(aggregatedData)
+              .join("circle")
+              .attr("cx", (d) => xScale(d.air_quality))
+              .attr("cy", (d) => yScale(d.physical_activity))
+              .attr("r", 0)
+              .attr("fill", "#2c7a67")
+              .attr("opacity", 0.6)
+              .attr("stroke", "#0a4d3c")
+              .attr("stroke-width", 1)
+              .on("mouseover", function (event, d) {
+                d3.select(this).attr("r", 6).attr("opacity", 1);
+                tooltip
+                  .style("opacity", 1)
+                  .html(
+                    `<strong>${d.local_authority}</strong><br>${
+                      d.nation
+                    }<br>Air Quality: £${d.air_quality.toFixed(
+                      2
+                    )}M<br>Physical Activity: £${d.physical_activity.toFixed(
+                      2
+                    )}M<br>Small Areas: ${d.count}`
+                  );
+              })
+              .on("mousemove", function (event) {
+                tooltip
+                  .style("left", event.pageX + 15 + "px")
+                  .style("top", event.pageY - 15 + "px");
+              })
+              .on("mouseout", function () {
+                d3.select(this).attr("r", 4).attr("opacity", 0.6);
+                tooltip.style("opacity", 0);
+              });
+
+            circles
+              .transition()
+              .duration(800)
+              .delay((d, i) => i * 0.5)
+              .attr("r", 4);
+          }
+
+          function showBubbleComfort() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Home Comfort: Excess Cold & Dampness Benefits (Grouped by Local Authority)"
+            );
+
+            // Group data by local_authority and calculate averages
+            const groupedData = d3.rollup(
+              sampledData,
+              (group) => ({
+                excess_cold: d3.mean(group, (d) => d.excess_cold),
+                dampness: d3.mean(group, (d) => d.dampness),
+                local_authority: group[0].local_authority,
+                nation: group[0].nation,
+                count: group.length,
+              }),
+              (d) => d.local_authority
+            );
+
+            const aggregatedData = Array.from(groupedData.values());
+
+            const xScale = d3
+              .scaleLinear()
+              .domain(d3.extent(aggregatedData, (d) => d.excess_cold))
+              .range([0, width])
+              .nice();
+
+            const yScale = d3
+              .scaleLinear()
+              .domain(d3.extent(aggregatedData, (d) => d.dampness))
+              .range([height, 0])
+              .nice();
+
+            const sizeScale = d3
+              .scaleSqrt()
+              .domain([
+                0,
+                d3.max(aggregatedData, (d) => d.excess_cold + d.dampness),
+              ])
+              .range([3, 25]);
+
+            // Axes
+            const xAxis = g
+              .append("g")
+              .attr("transform", `translate(0,${height})`)
+              .call(
+                d3.axisBottom(xScale).tickFormat((d) => `£${d.toFixed(2)}M`)
+              );
+
+            xAxis
+              .append("text")
+              .attr("x", width / 2)
+              .attr("y", 45)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Excess Cold Benefit (£M)");
+
+            const yAxis = g
+              .append("g")
+              .call(d3.axisLeft(yScale).tickFormat((d) => `£${d.toFixed(2)}M`));
+
+            yAxis
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("x", -height / 2)
+              .attr("y", -55)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Dampness Benefit (£M)");
+
+            // Bubbles
+            const bubbles = g
+              .selectAll("circle")
+              .data(aggregatedData)
+              .join("circle")
+              .attr("cx", (d) => xScale(d.excess_cold))
+              .attr("cy", (d) => yScale(d.dampness))
+              .attr("r", 0)
+              .attr("fill", "#3498db")
+              .attr("opacity", 0.6)
+              .attr("stroke", "#2980b9")
+              .attr("stroke-width", 1.5)
+              .on("mouseover", function (event, d) {
+                d3.select(this).attr("opacity", 1);
+                tooltip
+                  .style("opacity", 1)
+                  .html(
+                    `<strong>${d.local_authority}</strong><br>${
+                      d.nation
+                    }<br>Excess Cold: £${d.excess_cold.toFixed(
+                      2
+                    )}M<br>Dampness: £${d.dampness.toFixed(2)}M<br>Total: £${(
+                      d.excess_cold + d.dampness
+                    ).toFixed(2)}M<br>Small Areas: ${d.count}`
+                  );
+              })
+              .on("mousemove", function (event) {
+                tooltip
+                  .style("left", event.pageX + 15 + "px")
+                  .style("top", event.pageY - 15 + "px");
+              })
+              .on("mouseout", function () {
+                d3.select(this).attr("opacity", 0.6);
+                tooltip.style("opacity", 0);
+              });
+
+            bubbles
+              .transition()
+              .duration(1000)
+              .delay((d, i) => i * 0.5)
+              .attr("r", (d) => sizeScale(d.excess_cold + d.dampness));
+          }
+
+          function showBarChart() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Road Safety & Noise: Top vs Bottom Areas"
+            );
+
+            // Get top 10 and bottom 10 by sum
+            const sortedBySum = [...data].sort((a, b) => b.sum - a.sum);
+            const topAreas = sortedBySum.slice(0, 10);
+            const bottomAreas = sortedBySum.slice(-10);
+            const comparisonData = [...topAreas, ...bottomAreas];
+
+            // Prepare data for grouped bar chart
+            const categories = ["noise", "road_safety"];
+            const barData = comparisonData.map((d, i) => ({
+              area: d.local_authority,
+              nation: d.nation,
+              group: i < 10 ? "Top 10" : "Bottom 10",
+              noise: d.noise,
+              road_safety: d.road_safety,
+            }));
+
+            const x0 = d3
+              .scaleBand()
+              .domain(barData.map((d) => d.area))
+              .range([0, width])
+              .padding(0.2);
+
+            const x1 = d3
+              .scaleBand()
+              .domain(categories)
+              .range([0, x0.bandwidth()])
+              .padding(0.05);
+
+            const y = d3
+              .scaleLinear()
+              .domain([
+                d3.min(barData, (d) => Math.min(d.noise, d.road_safety)),
+                d3.max(barData, (d) => Math.max(d.noise, d.road_safety)),
+              ])
+              .range([height, 0])
+              .nice();
+
+            colorScaleDiverging.domain([
+              d3.min(barData, (d) => Math.min(d.noise, d.road_safety)),
+              0,
+              d3.max(barData, (d) => Math.max(d.noise, d.road_safety)),
+            ]);
+
+            // Y axis
+            const yAxis = g
+              .append("g")
+              .call(d3.axisLeft(y).tickFormat((d) => `£${d.toFixed(1)}M`));
+
+            yAxis
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("x", -height / 2)
+              .attr("y", -55)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Economic Value (£M)");
+
+            // Bars
+            const barGroups = g
+              .selectAll("g.bar-group")
+              .data(barData)
+              .join("g")
+              .attr("class", "bar-group")
+              .attr("transform", (d) => `translate(${x0(d.area)},0)`);
+
+            categories.forEach((category) => {
+              barGroups
+                .append("rect")
+                .attr("x", x1(category))
+                .attr("y", height)
+                .attr("width", x1.bandwidth())
+                .attr("height", 0)
+                .attr("fill", (d) => colorScaleDiverging(d[category]))
+                .attr("stroke", "#333")
+                .attr("stroke-width", 0.5)
+                .on("mouseover", function (event, d) {
+                  d3.select(this).attr("opacity", 0.7);
+                  tooltip
+                    .style("opacity", 1)
+                    .html(
+                      `<strong>${d.area}</strong><br>${d.nation}<br>${
+                        category === "noise" ? "Noise" : "Road Safety"
+                      }: £${d[category].toFixed(2)}M<br>Group: ${d.group}`
+                    );
+                })
+                .on("mousemove", function (event) {
+                  tooltip
+                    .style("left", event.pageX + 15 + "px")
+                    .style("top", event.pageY - 15 + "px");
+                })
+                .on("mouseout", function () {
+                  d3.select(this).attr("opacity", 1);
+                  tooltip.style("opacity", 0);
+                })
+                .transition()
+                .duration(1000)
+                .delay((d, i) => i * 30)
+                .attr("y", (d) => y(Math.max(0, d[category])))
+                .attr("height", (d) => Math.abs(y(d[category]) - y(0)));
+            });
+
+            // X axis (simplified)
+            const xAxis = g
+              .append("g")
+              .attr("transform", `translate(0,${y(0)})`)
+              .call(d3.axisBottom(x0).tickFormat(""));
+
+            // Legend
+            const legend = g
+              .append("g")
+              .attr("transform", `translate(${width - 150}, 20)`);
+
+            const legendData = [
+              {
+                label: "Noise",
+                color: colorScaleDiverging(d3.mean(barData, (d) => d.noise)),
+              },
+              {
+                label: "Road Safety",
+                color: colorScaleDiverging(
+                  d3.mean(barData, (d) => d.road_safety)
+                ),
+              },
+            ];
+
+            legendData.forEach((item, i) => {
+              const legendRow = legend
+                .append("g")
+                .attr("transform", `translate(0, ${i * 25})`);
+
+              legendRow
+                .append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", item.color);
+
+              legendRow
+                .append("text")
+                .attr("x", 25)
+                .attr("y", 13)
+                .attr("class", "legend")
+                .text(item.label);
+            });
+          }
+
+          function showFinalVisualization() {
+            g.selectAll("*").remove();
+            d3.select("#chart-title").text(
+              "Total Green Dividend: Economic Value by Region"
+            );
+
+            // Get top 50 areas by sum
+            const topRegions = [...data]
+              .sort((a, b) => b.sum - a.sum)
+              .slice(0, 50);
+
+            const xScale = d3
+              .scaleBand()
+              .domain(topRegions.map((d, i) => i))
+              .range([0, width])
+              .padding(0.15);
+
+            const yScale = d3
+              .scaleLinear()
+              .domain([0, d3.max(topRegions, (d) => d.sum)])
+              .range([height, 0])
+              .nice();
+
+            colorScaleSequential.domain(d3.extent(topRegions, (d) => d.sum));
+
+            // Bars
+            const bars = g
+              .selectAll("rect")
+              .data(topRegions)
+              .join("rect")
+              .attr("x", (d, i) => xScale(i))
+              .attr("y", height)
+              .attr("width", xScale.bandwidth())
+              .attr("height", 0)
+              .attr("fill", (d) => colorScaleSequential(d.sum))
+              .attr("stroke", "#0a4d3c")
+              .attr("stroke-width", 0.5)
+              .on("mouseover", function (event, d) {
+                d3.select(this).attr("opacity", 0.7);
+                tooltip
+                  .style("opacity", 1)
+                  .html(
+                    `<strong>${d.local_authority}</strong><br>${
+                      d.nation
+                    }<br>Total Benefit: £${d.sum.toFixed(
+                      2
+                    )}M<br>Air Quality: £${d.air_quality.toFixed(
+                      2
+                    )}M<br>Physical Activity: £${d.physical_activity.toFixed(
+                      2
+                    )}M`
+                  );
+              })
+              .on("mousemove", function (event) {
+                tooltip
+                  .style("left", event.pageX + 15 + "px")
+                  .style("top", event.pageY - 15 + "px");
+              })
+              .on("mouseout", function () {
+                d3.select(this).attr("opacity", 1);
+                tooltip.style("opacity", 0);
+              });
+
+            bars
+              .transition()
+              .duration(1000)
+              .delay((d, i) => i * 15)
+              .attr("y", (d) => yScale(d.sum))
+              .attr("height", (d) => height - yScale(d.sum));
+
+            // Y axis
+            const yAxis = g
+              .append("g")
+              .call(d3.axisLeft(yScale).tickFormat((d) => `£${d.toFixed(0)}M`));
+
+            yAxis
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("x", -height / 2)
+              .attr("y", -55)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Total Economic Benefit (£M)");
+
+            // X axis
+            const xAxis = g
+              .append("g")
+              .attr("transform", `translate(0,${height})`)
+              .call(d3.axisBottom(xScale).tickFormat((d) => `${+d + 1}`));
+
+            xAxis
+              .append("text")
+              .attr("x", width / 2)
+              .attr("y", 45)
+              .attr("fill", "#555")
+              .attr("class", "axis-label")
+              .style("text-anchor", "middle")
+              .text("Top 50 Regions (Ranked)");
+          }
+
+          // Initialize with bubble chart
+          showBubbleChart();
+
+          // Scrollama setup
+          const scroller = scrollama();
+
+          scroller
+            .setup({
+              step: ".step",
+              offset: 0.5,
+              debug: false,
+            })
+            .onStepEnter((response) => {
+              const stepIndex = +response.element.dataset.step;
+
+              // Update active state
+              d3.selectAll(".step").classed("active", false);
+              d3.select(response.element).classed("active", true);
+
+              // Update visualization based on step
+              switch (stepIndex) {
+                case 0:
+                  showChoroplethMap();
+                  break;
+                case 1:
+                  showScatterPlot();
+                  break;
+                case 2:
+                  showBubbleComfort();
+                  break;
+                case 3:
+                  showBarChart();
+                  break;
+                case 4:
+                  showFinalVisualization();
+                  break;
+              }
+            });
+
+          // Handle resize
+          window.addEventListener("resize", scroller.resize);
+        })
+        .catch((error) => {
+          console.error("Error loading CSV:", error);
+          alert(
+            "Failed to load data. Please ensure:\n1. cleaned_level_1_full.csv and lookups.csv are in the same folder as scrollytelling.html\n2. You are running this through a web server (not just opening the file directly)\n3. Check the browser console for more details"
+          );
+        });
+    </script>
+  </body>
+</html>
