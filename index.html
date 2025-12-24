@@ -598,108 +598,108 @@
           const colorScaleSequential = d3.scaleSequential(d3.interpolateGreens);
 
           // Visualization functions
-          function showBubbleChart() {
-            g.selectAll("*").remove();
-            d3.select("#chart-title").text(
-              "Distribution of Total Environmental Benefits"
-            );
+          // function showBubbleChart() {
+          //   g.selectAll("*").remove();
+          //   d3.select("#chart-title").text(
+          //     "Distribution of Total Environmental Benefits"
+          //   );
 
             // Aggregate data by bins
-            const bins = d3
-              .bin()
-              .value((d) => d.sum)
-              .thresholds(50)(data);
+            // const bins = d3
+            //   .bin()
+            //   .value((d) => d.sum)
+            //   .thresholds(50)(data);
 
-            const maxCount = d3.max(bins, (d) => d.length);
-            const radiusScale = d3
-              .scaleSqrt()
-              .domain([0, maxCount])
-              .range([5, 50]);
+            // const maxCount = d3.max(bins, (d) => d.length);
+            // const radiusScale = d3
+            //   .scaleSqrt()
+            //   .domain([0, maxCount])
+            //   .range([5, 50]);
 
-            const xScale = d3
-              .scaleLinear()
-              .domain(d3.extent(bins, (d) => d.x0))
-              .range([0, width]);
+            // const xScale = d3
+            //   .scaleLinear()
+            //   .domain(d3.extent(bins, (d) => d.x0))
+            //   .range([0, width]);
 
-            colorScaleSequential.domain(
-              d3.extent(bins, (d) => d3.mean(d, (v) => v.sum))
-            );
+            // colorScaleSequential.domain(
+            //   d3.extent(bins, (d) => d3.mean(d, (v) => v.sum))
+            // );
 
-            const simulation = d3
-              .forceSimulation(bins)
-              .force(
-                "x",
-                d3.forceX((d) => xScale((d.x0 + d.x1) / 2)).strength(0.5)
-              )
-              .force("y", d3.forceY(height / 2).strength(0.1))
-              .force(
-                "collision",
-                d3.forceCollide((d) => radiusScale(d.length) + 2)
-              )
-              .stop();
+            // const simulation = d3
+            //   .forceSimulation(bins)
+            //   .force(
+            //     "x",
+            //     d3.forceX((d) => xScale((d.x0 + d.x1) / 2)).strength(0.5)
+            //   )
+            //   .force("y", d3.forceY(height / 2).strength(0.1))
+            //   .force(
+            //     "collision",
+            //     d3.forceCollide((d) => radiusScale(d.length) + 2)
+            //   )
+            //   .stop();
 
-            for (let i = 0; i < 100; i++) simulation.tick();
+            // for (let i = 0; i < 100; i++) simulation.tick();
 
-            const bubbles = g
-              .selectAll("circle")
-              .data(bins)
-              .join("circle")
-              .attr("cx", (d) => d.x)
-              .attr("cy", (d) => d.y)
-              .attr("r", 0)
-              .attr("fill", (d) =>
-                colorScaleSequential(d3.mean(d, (v) => v.sum))
-              )
-              .attr("opacity", 0.7)
-              .attr("stroke", "#0a4d3c")
-              .attr("stroke-width", 1.5)
-              .on("mouseover", function (event, d) {
-                d3.select(this).attr("opacity", 1);
-                tooltip
-                  .style("opacity", 1)
-                  .html(
-                    `<strong>Benefit Range</strong>£${d.x0.toFixed(
-                      2
-                    )}M - £${d.x1.toFixed(2)}M<br>Areas: ${
-                      d.length
-                    }<br>Avg: £${d3.mean(d, (v) => v.sum).toFixed(2)}M`
-                  );
-              })
-              .on("mousemove", function (event) {
-                tooltip
-                  .style("left", event.pageX + 15 + "px")
-                  .style("top", event.pageY - 15 + "px");
-              })
-              .on("mouseout", function () {
-                d3.select(this).attr("opacity", 0.7);
-                tooltip.style("opacity", 0);
-              });
+            // const bubbles = g
+            //   .selectAll("circle")
+            //   .data(bins)
+            //   .join("circle")
+            //   .attr("cx", (d) => d.x)
+            //   .attr("cy", (d) => d.y)
+            //   .attr("r", 0)
+            //   .attr("fill", (d) =>
+            //     colorScaleSequential(d3.mean(d, (v) => v.sum))
+            //   )
+            //   .attr("opacity", 0.7)
+            //   .attr("stroke", "#0a4d3c")
+            //   .attr("stroke-width", 1.5)
+            //   .on("mouseover", function (event, d) {
+            //     d3.select(this).attr("opacity", 1);
+            //     tooltip
+            //       .style("opacity", 1)
+            //       .html(
+            //         `<strong>Benefit Range</strong>£${d.x0.toFixed(
+            //           2
+            //         )}M - £${d.x1.toFixed(2)}M<br>Areas: ${
+            //           d.length
+            //         }<br>Avg: £${d3.mean(d, (v) => v.sum).toFixed(2)}M`
+            //       );
+            //   })
+            //   .on("mousemove", function (event) {
+            //     tooltip
+            //       .style("left", event.pageX + 15 + "px")
+            //       .style("top", event.pageY - 15 + "px");
+            //   })
+            //   .on("mouseout", function () {
+            //     d3.select(this).attr("opacity", 0.7);
+            //     tooltip.style("opacity", 0);
+            //   });
 
-            bubbles
-              .transition()
-              .duration(1000)
-              .attr("r", (d) => radiusScale(d.length));
+            // bubbles
+            //   .transition()
+            //   .duration(1000)
+            //   .attr("r", (d) => radiusScale(d.length));
 
             // X axis
-            const xAxis = g
-              .append("g")
-              .attr("transform", `translate(0,${height})`)
-              .call(
-                d3
-                  .axisBottom(xScale)
-                  .ticks(8)
-                  .tickFormat((d) => `£${d.toFixed(0)}M`)
-              );
+          //   const xAxis = g
+          //     .append("g")
+          //     .attr("transform", `translate(0,${height})`)
+          //     .call(
+          //       d3
+          //         .axisBottom(xScale)
+          //         .ticks(8)
+          //         .tickFormat((d) => `£${d.toFixed(0)}M`)
+          //     );
 
-            xAxis
-              .append("text")
-              .attr("x", width / 2)
-              .attr("y", 45)
-              .attr("fill", "#555")
-              .attr("class", "axis-label")
-              .style("text-anchor", "middle")
-              .text("Total Environmental Benefit (£M)");
-          }
+          //   xAxis
+          //     .append("text")
+          //     .attr("x", width / 2)
+          //     .attr("y", 45)
+          //     .attr("fill", "#555")
+          //     .attr("class", "axis-label")
+          //     .style("text-anchor", "middle")
+          //     .text("Total Environmental Benefit (£M)");
+          // }
 
           function showChoroplethMap() {
             g.selectAll("*").remove();
@@ -740,7 +740,8 @@
                   .html(
                     `<strong>${d.local_authority}</strong><br>${
                       d.nation
-                    }<br>Air Quality: £${d.air_quality.toFixed(2)}M`
+                    }<br>Air Quality: £${d.air_quality.toFixed(2)}M
+                    <br>Small Area: ${d.small_area}`
                   );
               })
               .on("mousemove", function (event) {
@@ -1318,7 +1319,7 @@
           }
 
           // Initialize with bubble chart
-          showBubbleChart();
+          // showBubbleChart();
 
           // Scrollama setup
           const scroller = scrollama();
@@ -1368,3 +1369,4 @@
     </script>
   </body>
 </html>
+
